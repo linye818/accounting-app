@@ -11,18 +11,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 生成标准Flutter项目结构
-    - name: Create standard Flutter project
-      run: |
-        # 先删除现有不完整的Android目录
-        rm -rf android
-        # 用官方命令生成标准项目（会自动创建正确的Android结构）
-        flutter create --org com.example .
-
+    # 先加载Flutter环境（关键调整）
     - uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.22.0'
         channel: 'stable'
+
+    # 再生成标准项目结构
+    - name: Create standard Flutter project
+      run: |
+        rm -rf android
+        flutter create --org com.example .
 
     - run: flutter pub get
     - run: flutter build apk --release
