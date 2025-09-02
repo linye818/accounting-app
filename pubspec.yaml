@@ -2,6 +2,9 @@ name: accounting_app
 description: A simple offline accounting app.
 publish_to: 'none'
 version: 1.0.0
+flutter:
+  uses-material-design: true
+  generate: true # 启用国际化代码生成
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
