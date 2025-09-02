@@ -11,17 +11,17 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # 先加载Flutter环境（关键调整）
+    # 先加载Flutter环境
     - uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.22.0'
         channel: 'stable'
 
-    # 再生成标准项目结构
+    # 生成标准项目结构（使用符合规范的名称 accounting_app）
     - name: Create standard Flutter project
       run: |
         rm -rf android
-        flutter create --org com.example .
+        flutter create --org com.example --project-name accounting_app .
 
     - run: flutter pub get
     - run: flutter build apk --release
