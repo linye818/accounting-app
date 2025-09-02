@@ -3,25 +3,32 @@ name: Flutter Build APK
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4  # 更新到最新版本
+    - uses: actions/checkout@v4
+
+    # 生成标准Flutter项目结构
+    - name: Create standard Flutter project
+      run: |
+        # 先删除现有不完整的Android目录
+        rm -rf android
+        # 用官方命令生成标准项目（会自动创建正确的Android结构）
+        flutter create --org com.example .
+
     - uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.22.0'  # 使用较新的稳定版本
+        flutter-version: '3.22.0'
         channel: 'stable'
+
     - run: flutter pub get
     - run: flutter build apk --release
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4  # 关键更新：将v3改为v4
+      uses: actions/upload-artifact@v4
       with:
         name: app-release
         path: build/app/outputs/flutter-apk/app-release.apk
-    
