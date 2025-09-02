@@ -1,0 +1,14 @@
+{
+  "appTitle": "记账应用",
+  "totalIncomeThisMonth": "本月总收入",
+  "accountBalance": "账户结余",
+  "currentBalance": "当前余额",
+  "consumptionTrend": "消费趋势",
+  "recent7Days": "最近7天",
+  "frequentCategories": "常用分类",
+  "usageFrequency": "使用频率高",
+  "diningFood": "餐饮美食",
+  "transportation": "交通出行",
+  "shoppingList": "购物消费",
+  "housingUtilities": "住房租金"
+}
