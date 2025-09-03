@@ -2,15 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'providers/expense_provider.dart';
-import 'widgets/bottom_nav_bar.dart'; // 导入底部导航组件
+import 'widgets/bottom_nav_bar.dart';
 
 void main() {
-  // 全局异常捕获（可选，用于后续调试）
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint('Flutter 框架异常: ${details.exception}');
-  };
-
   runApp(const MyApp());
 }
 
@@ -24,8 +18,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExpenseProvider()),
       ],
       child: MaterialApp(
-        title: '记账应用',
-        // 支持中文本地化
+        title: '单机记账本',
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -33,14 +26,12 @@ class MyApp extends StatelessWidget {
         ],
         supportedLocales: const [Locale('zh', 'CN')],
         locale: const Locale('zh', 'CN'),
-        // 主题配置
         theme: ThemeData(
           primarySwatch: Colors.green,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        // 关键修复：将 AppBottomNavBar 改为 BottomNavBar（与组件类名一致）
         home: const BottomNavBar(),
-        debugShowCheckedModeBanner: false, // 隐藏调试横幅
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
