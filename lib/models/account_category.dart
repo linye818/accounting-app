@@ -19,6 +19,14 @@ class AccountCategory {
       isExpense: map['is_expense'] == 1,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'icon': icon,
+      'is_expense': isExpense ? 1 : 0,
+    };
+  }
 }
 
 List<AccountCategory> defaultAccountCategories = [
