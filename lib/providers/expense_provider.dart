@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/expense.dart';
-import '../models/category.dart' as cat; // 别名解决冲突
+import '../models/category.dart' as cat;
 
 class ExpenseProvider with ChangeNotifier {
   List<Expense> _expenses = [];
@@ -13,7 +13,7 @@ class ExpenseProvider with ChangeNotifier {
   UnmodifiableListView<Expense> get expenses => UnmodifiableListView(_expenses);
   UnmodifiableListView<cat.Category> get categories => UnmodifiableListView(_categories);
 
-  // 初始化数据库（关键修复：确保数据库表存在）
+  // 初始化数据库（含分类表）
   Future<void> initDatabase() async {
     if (_database != null) return;
 
@@ -45,7 +45,7 @@ class ExpenseProvider with ChangeNotifier {
             FOREIGN KEY (category_id) REFERENCES categories (id)
           )
         ''');
-        // 插入默认分类（确保有可选分类）
+        // 插入默认分类
         await db.insert('categories', {
           'name': '餐饮美食',
           'icon': 'restaurant',
@@ -68,13 +68,9 @@ class ExpenseProvider with ChangeNotifier {
         });
       },
     );
-
-    // 初始化时加载数据
-    await loadCategories();
-    await loadExpenses();
   }
 
-  // 加载分类（修复：确保正确查询和转换）
+  // 加载分类
   Future<void> loadCategories() async {
     if (_database == null) await initDatabase();
     
@@ -90,14 +86,11 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 加载账单（修复：按日期倒序排列，最新的在前）
+  // 加载账单
   Future<void> loadExpenses() async {
     if (_database == null) await initDatabase();
     
-    final List<Map<String, dynamic>> maps = await _database!.query(
-      'expenses',
-      orderBy: 'date DESC', // 最新的账单显示在前面
-    );
+    final List<Map<String, dynamic>> maps = await _database!.query('expenses', orderBy: 'date DESC');
     _expenses = List.generate(maps.length, (i) {
       return Expense(
         id: maps[i]['id'],
@@ -108,6 +101,39 @@ class ExpenseProvider with ChangeNotifier {
         isExpense: maps[i]['is_expense'] == 1,
       );
     });
+    notifyListeners();
+  }
+
+  // 添加分类（新增方法）
+  Future<void> addCategory(cat.Category category) async {
+    if (_database == null) await initDatabase();
+    
+    final id = await _database!.insert('categories', {
+      'name': category.name,
+      'icon': category.icon,
+      'is_expense': category.isExpense ? 1 : 0,
+    });
+    
+    _categories.add(cat.Category(
+      id: id,
+      name: category.name,
+      icon: category.icon,
+      isExpense: category.isExpense,
+    ));
+    notifyListeners();
+  }
+
+  // 删除分类（新增方法）
+  Future<void> deleteCategory(int categoryId) async {
+    if (_database == null) return;
+    
+    await _database!.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [categoryId],
+    );
+    
+    _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 
@@ -123,7 +149,7 @@ class ExpenseProvider with ChangeNotifier {
       'is_expense': expense.isExpense ? 1 : 0,
     });
     
-    _expenses.insert(0, Expense( // 插入到列表开头，立即显示
+    _expenses.insert(0, Expense(
       id: id,
       amount: expense.amount,
       categoryId: expense.categoryId,
