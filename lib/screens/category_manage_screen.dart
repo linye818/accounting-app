@@ -45,6 +45,7 @@ class _CategoryManageScreenState extends State<CategoryManageScreen> {
     final provider = Provider.of<ExpenseProvider>(context, listen: false);
     provider.addCategory(
       cat.Category(
+        // 不传递id，由数据库自动生成
         name: _nameController.text,
         icon: _iconController.text,
         isExpense: _isExpense,
@@ -141,7 +142,7 @@ class _CategoryManageScreenState extends State<CategoryManageScreen> {
                           subtitle: Text(category.isExpense ? '支出分类' : '收入分类'),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteCategory(category.id),
+                            onPressed: () => _deleteCategory(category.id!),
                           ),
                         );
                       },
