@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/expense_provider.dart';
-import '../models/expense.dart'; // 新增导入 Expense 类
+import '../models/account_category.dart';
 
 class StatisticScreen extends StatefulWidget {
   const StatisticScreen({Key? key}) : super(key: key);
@@ -12,11 +12,9 @@ class StatisticScreen extends StatefulWidget {
 }
 
 class _StatisticScreenState extends State<StatisticScreen> {
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(DateTime.now().year, DateTime.now().month, 1),
-    end: DateTime.now(),
-  );
   bool _isLoading = true;
+  double _totalExpense = 0.0;
+  double _totalIncome = 0.0;
 
   @override
   void initState() {
@@ -24,167 +22,94 @@ class _StatisticScreenState extends State<StatisticScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
+  // 加载账单数据并计算收支总和
   Future<void> _loadData() async {
     try {
       final provider = Provider.of<ExpenseProvider>(context, listen: false);
       await provider.initDatabase();
-      await provider.loadExpenses();
+      await provider.loadExpenses(); // 现在该方法已能正常识别
+
+      // 计算总支出和总收入
+      double expenseSum = 0.0;
+      double incomeSum = 0.0;
+      for (var expense in provider.expenses) {
+        if (expense.isExpense) {
+          expenseSum += expense.amount;
+        } else {
+          incomeSum += expense.amount;
+        }
+      }
+
+      setState(() {
+        _totalExpense = expenseSum;
+        _totalIncome = incomeSum;
+        _isLoading = false;
+      });
     } catch (e) {
       print('统计页加载错误: $e');
-    } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  // 计算指定周期内的收支
-  Map<String, double> _calculateStats(List<Expense> allExpenses) {
-    double income = 0;
-    double expense = 0;
-    for (final exp in allExpenses) {
-      if (exp.date.isAfter(_dateRange.start) && exp.date.isBefore(_dateRange.end)) {
-        if (exp.isExpense) expense += exp.amount;
-        else income += exp.amount;
-      }
-    }
-    return {
-      'income': income,
-      'expense': expense,
-      'balance': income - expense,
-    };
-  }
-
-  // 选择日期范围
-  Future<void> _selectDateRange() async {
-    final pickedRange = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: _dateRange,
-    );
-    if (pickedRange != null) {
-      setState(() => _dateRange = pickedRange);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ExpenseProvider>(context);
-    final stats = _calculateStats(provider.expenses);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('统计'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: _selectDateRange,
-            tooltip: '选择日期范围',
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('收支统计')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // 日期范围显示
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(
-                        '统计周期: ${_dateFormat.format(_dateRange.start)} 至 ${_dateFormat.format(_dateRange.end)}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // 收支统计卡片
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          elevation: 2,
-                          color: Colors.green[50],
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                const Text('总收入', style: TextStyle(color: Colors.green)),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '¥${stats['income']?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Card(
-                          elevation: 2,
-                          color: Colors.red[50],
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                const Text('总支出', style: TextStyle(color: Colors.red)),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '¥${stats['expense']?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Card(
-                          elevation: 2,
-                          color: Colors.blue[50],
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                const Text('账户结余', style: TextStyle(color: Colors.blue)),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '¥${stats['balance']?.toStringAsFixed(2) ?? '0.00'}',
-                                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // 趋势图（临时占位，后续可扩展）
+                  // 收支概览卡片
                   Card(
                     elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          const Text('消费趋势', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 200,
-                            color: Colors.grey[100],
-                            alignment: Alignment.center,
-                            child: const Text('消费趋势图表（后续扩展）'),
+                          // 总支出
+                          Column(
+                            children: [
+                              const Text('总支出', style: TextStyle(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              Text(
+                                '¥${_totalExpense.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // 总收入
+                          Column(
+                            children: [
+                              const Text('总收入', style: TextStyle(fontSize: 16)),
+                              const SizedBox(height: 8),
+                              Text(
+                                '¥${_totalIncome.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.greenAccent,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // 提示文本（可后续添加分类统计图表）
+                  const Center(
+                    child: Text(
+                      '分类统计图表（待实现）',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                   ),
                 ],
@@ -192,6 +117,4 @@ class _StatisticScreenState extends State<StatisticScreen> {
             ),
     );
   }
-
-  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd');
 }
