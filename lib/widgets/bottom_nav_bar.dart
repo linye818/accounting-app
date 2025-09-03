@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/detail_screen.dart';
 import '../screens/statistic_screen.dart';
+import '../screens/category_manage_screen.dart';
 
 class AppBottomNavBar extends StatefulWidget {
   const AppBottomNavBar({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
   final List<Widget> _screens = [
     const DetailScreen(),
     const StatisticScreen(),
+    const CategoryManageScreen(),
   ];
 
   @override
@@ -31,6 +33,10 @@ class _AppBottomNavBarState extends State<AppBottomNavBar> {
           BottomNavigationBarItem(
             icon: Icon(Icons.pie_chart),
             label: '统计',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: '分类管理',
           ),
         ],
       ),
