@@ -1,6 +1,20 @@
 import 'package:sqflite/sqflite.dart';
 
 class Category {
+  final int? id; // 改为可空类型，添加新分类时可以不提供id
+  final String name;
+  final String icon;
+  final bool isExpense;
+
+  Category({
+    this.id, // 改为可选参数
+    required this.name,
+    required this.icon,
+    required this.isExpense,
+  });
+}
+
+class Category {
   final int id;
   final String name;
   final String icon; // 图标名称（比如“餐饮”对应“restaurant”图标）
