@@ -25,7 +25,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    // 初始化表单数据
     if (widget.expense != null) {
       _descriptionController.text = widget.expense!.description;
       _amountController.text = widget.expense!.amount.toStringAsFixed(2);
@@ -33,20 +32,11 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
       _date = widget.expense!.date;
       _isExpense = widget.expense!.isExpense;
     } else {
-      _categoryId = 1; // 默认餐饮分类
+      _categoryId = 1;
       _date = DateTime.now();
-      _isExpense = true; // 默认支出
+      _isExpense = true;
     }
-    // 加载分类（添加异常捕获，防止黑屏）
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await _loadData();
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('页面加载失败: $e')),
-        );
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   Future<void> _loadData() async {
@@ -62,7 +52,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
   }
 
   void _submitForm() {
-    // 验证表单
     if (_descriptionController.text.isEmpty || _amountController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('描述和金额不能为空')),
@@ -73,12 +62,11 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入有效的正数金额（如 100 或 100.50）')),
+        const SnackBar(content: Text('请输入有效的正数金额')),
       );
       return;
     }
 
-    // 提交数据
     final expense = Expense(
       id: widget.expense?.id ?? 0,
       description: _descriptionController.text,
@@ -137,7 +125,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.expense == null ? '添加账单' : '编辑账单'),
-        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -145,7 +132,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
               padding: const EdgeInsets.all(16.0),
               child: ListView(
                 children: [
-                  // 描述输入框
                   TextField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
@@ -153,11 +139,8 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                       border: OutlineInputBorder(),
                       hintText: '如：午餐、打车费',
                     ),
-                    textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-
-                  // 金额输入框
                   TextField(
                     controller: _amountController,
                     decoration: const InputDecoration(
@@ -167,36 +150,26 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                       hintText: '请输入金额',
                     ),
                     keyboardType: TextInputType.numberWithOptions(decimal: true),
-                    textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-
-                  // 分类选择下拉框（添加空分类提示）
                   DropdownButtonFormField<int>(
                     value: _categoryId,
                     decoration: const InputDecoration(
                       labelText: '选择分类',
                       border: OutlineInputBorder(),
                     ),
-                    items: filteredCategories.isNotEmpty
-                        ? filteredCategories.map((category) {
-                            return DropdownMenuItem<int>(
-                              value: category.id!,
-                              child: Row(
-                                children: [
-                                  Icon(_getCategoryIcon(category.icon), size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(category.name),
-                                ],
-                              ),
-                            );
-                          }).toList()
-                        : [
-                            const DropdownMenuItem<int>(
-                              value: -1,
-                              child: Text('暂无分类，请先添加'),
-                            ),
+                    items: filteredCategories.map((category) {
+                      return DropdownMenuItem<int>(
+                        value: category.id!,
+                        child: Row(
+                          children: [
+                            Icon(_getCategoryIcon(category.icon), size: 18),
+                            const SizedBox(width: 8),
+                            Text(category.name),
                           ],
+                        ),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() => _categoryId = value);
@@ -204,15 +177,12 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // 支出/收入切换
                   SwitchListTile(
                     title: const Text('支出 / 收入'),
                     value: _isExpense,
                     onChanged: (value) {
                       setState(() {
                         _isExpense = value;
-                        // 切换类型时默认选中第一个分类
                         if (filteredCategories.isNotEmpty) {
                           _categoryId = filteredCategories.first.id!;
                         }
@@ -221,8 +191,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                     secondary: Icon(_isExpense ? Icons.money_off : Icons.attach_money),
                   ),
                   const SizedBox(height: 16),
-
-                  // 日期选择
                   ListTile(
                     title: const Text('选择日期'),
                     subtitle: Text(DateFormat('yyyy-MM-dd').format(_date)),
@@ -230,22 +198,11 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                     onTap: _selectDate,
                   ),
                   const SizedBox(height: 24),
-
-                  // 提交按钮
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        widget.expense == null ? '添加账单' : '保存修改',
-                        style: const TextStyle(fontSize: 18),
-                      ),
+                      child: Text(widget.expense == null ? '添加账单' : '保存修改'),
                     ),
                   ),
                 ],
