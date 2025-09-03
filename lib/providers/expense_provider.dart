@@ -3,15 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/expense.dart';
-import '../models/category.dart' as cat;
+import '../models/category.dart';
 
 class ExpenseProvider with ChangeNotifier {
   List<Expense> _expenses = [];
-  List<cat.Category> _categories = [];
+  List<Category> _categories = [];
   Database? _database;
 
   UnmodifiableListView<Expense> get expenses => UnmodifiableListView(_expenses);
-  UnmodifiableListView<cat.Category> get categories => UnmodifiableListView(_categories);
+  UnmodifiableListView<Category> get categories => UnmodifiableListView(_categories);
 
   Future<void> initDatabase() async {
     if (_database != null) return;
@@ -42,11 +42,13 @@ class ExpenseProvider with ChangeNotifier {
             FOREIGN KEY (category_id) REFERENCES categories (id)
           )
         ''');
-        await db.insert('categories', {
-          'name': '餐饮美食',
-          'icon': 'restaurant',
-          'is_expense': 1
-        });
+        for (var category in defaultCategories) {
+          await db.insert('categories', {
+            'name': category.name,
+            'icon': category.icon,
+            'is_expense': category.isExpense ? 1 : 0,
+          });
+        }
       },
     );
   }
@@ -55,19 +57,19 @@ class ExpenseProvider with ChangeNotifier {
     if (_database == null) await initDatabase();
     
     final List<Map<String, dynamic>> maps = await _database!.query('categories');
-    _categories = List.generate(maps.length, (i) {
-      return cat.Category(
-        id: maps[i]['id'],
-        name: maps[i]['name'],
-        icon: maps[i]['icon'],
-        isExpense: maps[i]['is_expense'] == 1,
-      );
-    });
+    _categories = List.generate(maps.length, (i) => Category.fromMap(maps[i]));
     notifyListeners();
   }
 
-  // 添加分类时使用数据库返回的ID
-  Future<void> addCategory(cat.Category category) async {
+  Future<void> loadExpenses() async {
+    if (_database == null) await initDatabase();
+    
+    final List<Map<String, dynamic>> maps = await _database!.query('expenses', orderBy: 'date DESC');
+    _expenses = List.generate(maps.length, (i) => Expense.fromMap(maps[i]));
+    notifyListeners();
+  }
+
+  Future<void> addCategory(Category category) async {
     if (_database == null) await initDatabase();
     
     final id = await _database!.insert('categories', {
@@ -76,8 +78,7 @@ class ExpenseProvider with ChangeNotifier {
       'is_expense': category.isExpense ? 1 : 0,
     });
     
-    // 使用数据库生成的ID创建新分类
-    _categories.add(cat.Category(
+    _categories.add(Category(
       id: id,
       name: category.name,
       icon: category.icon,
@@ -86,41 +87,30 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 其他方法保持不变...
-  Future<void> loadExpenses() async {
-    if (_database == null) await initDatabase();
-    
-    final List<Map<String, dynamic>> maps = await _database!.query('expenses', orderBy: 'date DESC');
-    _expenses = List.generate(maps.length, (i) {
-      return Expense(
-        id: maps[i]['id'],
-        amount: maps[i]['amount'],
-        categoryId: maps[i]['category_id'],
-        date: DateTime.fromMillisecondsSinceEpoch(maps[i]['date']),
-        description: maps[i]['description'],
-        isExpense: maps[i]['is_expense'] == 1,
-      );
-    });
+  Future<void> deleteCategory(int categoryId) async {
+    if (_database == null) return;
+
+    await _database!.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [categoryId],
+    );
+
+    _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 
   Future<void> addExpense(Expense expense) async {
     if (_database == null) await initDatabase();
     
-    final id = await _database!.insert('expenses', {
-      'amount': expense.amount,
-      'category_id': expense.categoryId,
-      'date': expense.date.millisecondsSinceEpoch,
-      'description': expense.description,
-      'is_expense': expense.isExpense ? 1 : 0,
-    });
+    final id = await _database!.insert('expenses', expense.toMap());
     
     _expenses.insert(0, Expense(
       id: id,
+      description: expense.description,
       amount: expense.amount,
       categoryId: expense.categoryId,
       date: expense.date,
-      description: expense.description,
       isExpense: expense.isExpense,
     ));
     notifyListeners();
@@ -131,13 +121,7 @@ class ExpenseProvider with ChangeNotifier {
     
     await _database!.update(
       'expenses',
-      {
-        'amount': expense.amount,
-        'category_id': expense.categoryId,
-        'date': expense.date.millisecondsSinceEpoch,
-        'description': expense.description,
-        'is_expense': expense.isExpense ? 1 : 0,
-      },
+      expense.toMap(),
       where: 'id = ?',
       whereArgs: [expense.id],
     );
@@ -159,19 +143,6 @@ class ExpenseProvider with ChangeNotifier {
     );
     
     _expenses.removeWhere((e) => e.id == id);
-    notifyListeners();
-  }
-
-  Future<void> deleteCategory(int categoryId) async {
-    if (_database == null) return;
-
-    await _database!.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [categoryId],
-    );
-
-    _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 }
