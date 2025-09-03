@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../screens/statistic_screen.dart';
 import '../screens/category_manage_screen.dart';
+import '../screens/expense_list_screen.dart';
 import '../screens/add_edit_expense_screen.dart';
-import '../screens/expense_list_screen.dart'; // 新增导入
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({Key? key}) : super(key: key);
@@ -14,12 +14,11 @@ class BottomNavBar extends StatefulWidget {
 class _BottomNavBarState extends State<BottomNavBar> {
   int _currentIndex = 0;
 
-  // 导航页面列表（替换明细页为账单列表页）
   final List<Widget> _pages = [
     const StatisticScreen(),
     const CategoryManageScreen(),
     const AddEditExpenseScreen(),
-    const ExpenseListScreen(), // 替换为账单列表页
+    const ExpenseListScreen(),
   ];
 
   @override
