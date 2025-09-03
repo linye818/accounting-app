@@ -11,7 +11,6 @@ class AccountCategory {
     required this.isExpense,
   });
 
-  // 从数据库Map转换为对象
   static AccountCategory fromMap(Map<String, dynamic> map) {
     return AccountCategory(
       id: map['id'],
@@ -22,7 +21,6 @@ class AccountCategory {
   }
 }
 
-// 默认分类列表（初始化数据库时使用）
 List<AccountCategory> defaultAccountCategories = [
   AccountCategory(id: 1, name: '餐饮', icon: 'restaurant', isExpense: true),
   AccountCategory(id: 2, name: '交通', icon: 'directions_car', isExpense: true),
