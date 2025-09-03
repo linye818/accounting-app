@@ -2,7 +2,7 @@ class Expense {
   final int id;
   final String description;
   final double amount;
-  final int categoryId; // 关联 AccountCategory 的 id
+  final int categoryId;
   final DateTime date;
   final bool isExpense;
 
@@ -15,7 +15,6 @@ class Expense {
     required this.isExpense,
   });
 
-  // 转换为数据库存储的Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -27,7 +26,6 @@ class Expense {
     };
   }
 
-  // 从数据库Map转换为对象
   static Expense fromMap(Map<String, dynamic> map) {
     return Expense(
       id: map['id'],
