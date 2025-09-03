@@ -6,7 +6,7 @@ import '../models/expense.dart';
 import '../models/account_category.dart';
 
 class AddEditExpenseScreen extends StatefulWidget {
-  final Expense? expense;
+  final Expense? expense; // 编辑时传入已有账单，添加时为null
 
   const AddEditExpenseScreen({Key? key, this.expense}) : super(key: key);
 
@@ -33,14 +33,15 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
       _date = widget.expense!.date;
       _isExpense = widget.expense!.isExpense;
     } else {
-      _categoryId = 1; // 默认餐饮分类
+      _categoryId = 1; // 默认分类（餐饮）
       _date = DateTime.now();
       _isExpense = true; // 默认支出
     }
-    // 加载分类
+    // 加载分类数据
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
+  // 加载分类
   Future<void> _loadData() async {
     try {
       final provider = Provider.of<ExpenseProvider>(context, listen: false);
@@ -53,6 +54,7 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     }
   }
 
+  // 提交表单
   void _submitForm() {
     // 验证表单
     if (_descriptionController.text.isEmpty || _amountController.text.isEmpty) {
@@ -90,6 +92,7 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     Navigator.pop(context);
   }
 
+  // 选择日期
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -102,6 +105,7 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     }
   }
 
+  // 获取分类图标
   IconData _getCategoryIcon(String iconName) {
     switch (iconName) {
       case 'restaurant': return Icons.restaurant;
@@ -119,7 +123,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     }
   }
 
-  // 重点：所有括号、分号完全闭合
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ExpenseProvider>(context);
@@ -130,6 +133,7 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.expense == null ? '添加账单' : '编辑账单'),
+        centerTitle: true,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -216,16 +220,22 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // 提交按钮
+                  // 提交按钮（关键修复：移除 styleFrom 中的 fontSize，在 Text 内设置）
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        fontSize: 18,
+                        // 移除错误的 fontSize 参数
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text(widget.expense == null ? '添加账单' : '保存修改'),
+                      child: Text(
+                        widget.expense == null ? '添加账单' : '保存修改',
+                        style: const TextStyle(fontSize: 18), // 正确设置字体大小的位置
+                      ),
                     ),
                   ),
                 ],
