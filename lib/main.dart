@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'dart:ui'; // 新增导入，用于 PlatformDispatcher
 import 'providers/expense_provider.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 void main() {
-  // 全局异常捕获
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Flutter 框架内异常捕获
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    print('Flutter 框架异常: ${details.exception}');
+    debugPrint('Flutter 框架异常: ${details.exception}');
   };
-  runZonedGuarded(() {
-    WidgetsFlutterBinding.ensureInitialized();
-    runApp(const MyApp());
-  }, (Object error, StackTrace stackTrace) {
-    print('全局未捕获异常: $error\n$stackTrace');
-  });
+
+  // 平台级异常捕获
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stackTrace) {
+    debugPrint('平台级未捕获异常: $error\n$stackTrace');
+    return true; // 返回 true 表示异常已处理
+  };
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
