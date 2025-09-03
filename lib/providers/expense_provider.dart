@@ -66,6 +66,27 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 添加分类时使用数据库返回的ID
+  Future<void> addCategory(cat.Category category) async {
+    if (_database == null) await initDatabase();
+    
+    final id = await _database!.insert('categories', {
+      'name': category.name,
+      'icon': category.icon,
+      'is_expense': category.isExpense ? 1 : 0,
+    });
+    
+    // 使用数据库生成的ID创建新分类
+    _categories.add(cat.Category(
+      id: id,
+      name: category.name,
+      icon: category.icon,
+      isExpense: category.isExpense,
+    ));
+    notifyListeners();
+  }
+
+  // 其他方法保持不变...
   Future<void> loadExpenses() async {
     if (_database == null) await initDatabase();
     
@@ -80,37 +101,6 @@ class ExpenseProvider with ChangeNotifier {
         isExpense: maps[i]['is_expense'] == 1,
       );
     });
-    notifyListeners();
-  }
-
-  Future<void> addCategory(cat.Category category) async {
-    if (_database == null) await initDatabase();
-    
-    final id = await _database!.insert('categories', {
-      'name': category.name,
-      'icon': category.icon,
-      'is_expense': category.isExpense ? 1 : 0,
-    });
-    
-    _categories.add(cat.Category(
-      id: id,
-      name: category.name,
-      icon: category.icon,
-      isExpense: category.isExpense,
-    ));
-    notifyListeners();
-  }
-
-  Future<void> deleteCategory(int categoryId) async {
-    if (_database == null) return;
-
-    await _database!.delete(
-      'categories',
-      where: 'id = ?',
-      whereArgs: [categoryId],
-    );
-
-    _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 
@@ -141,7 +131,13 @@ class ExpenseProvider with ChangeNotifier {
     
     await _database!.update(
       'expenses',
-      expense.toMap(),
+      {
+        'amount': expense.amount,
+        'category_id': expense.categoryId,
+        'date': expense.date.millisecondsSinceEpoch,
+        'description': expense.description,
+        'is_expense': expense.isExpense ? 1 : 0,
+      },
       where: 'id = ?',
       whereArgs: [expense.id],
     );
@@ -163,6 +159,19 @@ class ExpenseProvider with ChangeNotifier {
     );
     
     _expenses.removeWhere((e) => e.id == id);
+    notifyListeners();
+  }
+
+  Future<void> deleteCategory(int categoryId) async {
+    if (_database == null) return;
+
+    await _database!.delete(
+      'categories',
+      where: 'id = ?',
+      whereArgs: [categoryId],
+    );
+
+    _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 }
