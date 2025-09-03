@@ -13,7 +13,6 @@ class ExpenseProvider with ChangeNotifier {
   UnmodifiableListView<Expense> get expenses => UnmodifiableListView(_expenses);
   UnmodifiableListView<cat.Category> get categories => UnmodifiableListView(_categories);
 
-  // 初始化数据库（含分类表）
   Future<void> initDatabase() async {
     if (_database != null) return;
 
@@ -24,7 +23,6 @@ class ExpenseProvider with ChangeNotifier {
       path,
       version: 1,
       onCreate: (db, version) async {
-        // 创建分类表
         await db.execute('''
           CREATE TABLE categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,7 +31,6 @@ class ExpenseProvider with ChangeNotifier {
             is_expense INTEGER NOT NULL
           )
         ''');
-        // 创建支出表
         await db.execute('''
           CREATE TABLE expenses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,32 +42,15 @@ class ExpenseProvider with ChangeNotifier {
             FOREIGN KEY (category_id) REFERENCES categories (id)
           )
         ''');
-        // 插入默认分类
         await db.insert('categories', {
           'name': '餐饮美食',
           'icon': 'restaurant',
           'is_expense': 1
         });
-        await db.insert('categories', {
-          'name': '交通出行',
-          'icon': 'directions_car',
-          'is_expense': 1
-        });
-        await db.insert('categories', {
-          'name': '购物消费',
-          'icon': 'shopping_cart',
-          'is_expense': 1
-        });
-        await db.insert('categories', {
-          'name': '工资收入',
-          'icon': 'attach_money',
-          'is_expense': 0
-        });
       },
     );
   }
 
-  // 加载分类
   Future<void> loadCategories() async {
     if (_database == null) await initDatabase();
     
@@ -86,7 +66,6 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 加载账单
   Future<void> loadExpenses() async {
     if (_database == null) await initDatabase();
     
@@ -104,7 +83,6 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 添加分类（新增方法）
   Future<void> addCategory(cat.Category category) async {
     if (_database == null) await initDatabase();
     
@@ -123,21 +101,19 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 删除分类（新增方法）
   Future<void> deleteCategory(int categoryId) async {
     if (_database == null) return;
-    
+
     await _database!.delete(
       'categories',
       where: 'id = ?',
       whereArgs: [categoryId],
     );
-    
+
     _categories.removeWhere((c) => c.id == categoryId);
     notifyListeners();
   }
 
-  // 添加账单
   Future<void> addExpense(Expense expense) async {
     if (_database == null) await initDatabase();
     
@@ -160,7 +136,6 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // 更新账单
   Future<void> updateExpense(Expense expense) async {
     if (_database == null) return;
     
@@ -178,7 +153,6 @@ class ExpenseProvider with ChangeNotifier {
     }
   }
 
-  // 删除账单
   Future<void> deleteExpense(int id) async {
     if (_database == null) return;
     
