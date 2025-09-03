@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-
-import 'screens/home_screen.dart';
 import 'providers/expense_provider.dart';
+import 'widgets/bottom_nav_bar.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    // 确保数据库初始化
+    final provider = ExpenseProvider();
+    await provider.initDatabase();
+    await provider.loadCategories();
+    await provider.loadExpenses();
+  });
   runApp(const MyApp());
 }
 
@@ -26,12 +31,10 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('zh', 'CN'), // 强制中文
-        ],
+        supportedLocales: const [Locale('zh', 'CN')],
         locale: const Locale('zh', 'CN'),
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: const HomeScreen(),
+        theme: ThemeData(primarySwatch: Colors.green), // 主色调改为绿色更贴合参考图
+        home: const AppBottomNavBar(),
       ),
     );
   }
