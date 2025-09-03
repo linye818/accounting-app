@@ -6,7 +6,7 @@ import '../models/expense.dart';
 import '../models/account_category.dart';
 
 class AddEditExpenseScreen extends StatefulWidget {
-  final Expense? expense; // 编辑时传入已有账单，添加时为null
+  final Expense? expense;
 
   const AddEditExpenseScreen({Key? key, this.expense}) : super(key: key);
 
@@ -33,15 +33,22 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
       _date = widget.expense!.date;
       _isExpense = widget.expense!.isExpense;
     } else {
-      _categoryId = 1; // 默认分类（餐饮）
+      _categoryId = 1; // 默认餐饮分类
       _date = DateTime.now();
       _isExpense = true; // 默认支出
     }
-    // 加载分类数据
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    // 加载分类（添加异常捕获，防止黑屏）
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await _loadData();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('页面加载失败: $e')),
+        );
+      }
+    });
   }
 
-  // 加载分类
   Future<void> _loadData() async {
     try {
       final provider = Provider.of<ExpenseProvider>(context, listen: false);
@@ -54,7 +61,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     }
   }
 
-  // 提交表单
   void _submitForm() {
     // 验证表单
     if (_descriptionController.text.isEmpty || _amountController.text.isEmpty) {
@@ -92,7 +98,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     Navigator.pop(context);
   }
 
-  // 选择日期
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -105,7 +110,6 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
     }
   }
 
-  // 获取分类图标
   IconData _getCategoryIcon(String iconName) {
     switch (iconName) {
       case 'restaurant': return Icons.restaurant;
@@ -167,25 +171,32 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // 分类选择下拉框
+                  // 分类选择下拉框（添加空分类提示）
                   DropdownButtonFormField<int>(
                     value: _categoryId,
                     decoration: const InputDecoration(
                       labelText: '选择分类',
                       border: OutlineInputBorder(),
                     ),
-                    items: filteredCategories.map((category) {
-                      return DropdownMenuItem<int>(
-                        value: category.id!, // 数据库分类id非空
-                        child: Row(
-                          children: [
-                            Icon(_getCategoryIcon(category.icon), size: 18),
-                            const SizedBox(width: 8),
-                            Text(category.name),
+                    items: filteredCategories.isNotEmpty
+                        ? filteredCategories.map((category) {
+                            return DropdownMenuItem<int>(
+                              value: category.id!,
+                              child: Row(
+                                children: [
+                                  Icon(_getCategoryIcon(category.icon), size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(category.name),
+                                ],
+                              ),
+                            );
+                          }).toList()
+                        : [
+                            const DropdownMenuItem<int>(
+                              value: -1,
+                              child: Text('暂无分类，请先添加'),
+                            ),
                           ],
-                        ),
-                      );
-                    }).toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() => _categoryId = value);
@@ -220,21 +231,20 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // 提交按钮（关键修复：移除 styleFrom 中的 fontSize，在 Text 内设置）
+                  // 提交按钮
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        // 移除错误的 fontSize 参数
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
                         widget.expense == null ? '添加账单' : '保存修改',
-                        style: const TextStyle(fontSize: 18), // 正确设置字体大小的位置
+                        style: const TextStyle(fontSize: 18),
                       ),
                     ),
                   ),
