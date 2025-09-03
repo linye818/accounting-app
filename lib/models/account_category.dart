@@ -22,7 +22,7 @@ class AccountCategory {
   }
 }
 
-// 默认分类列表
+// 默认分类列表（初始化数据库时使用）
 List<AccountCategory> defaultAccountCategories = [
   AccountCategory(id: 1, name: '餐饮', icon: 'restaurant', isExpense: true),
   AccountCategory(id: 2, name: '交通', icon: 'directions_car', isExpense: true),
