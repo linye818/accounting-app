@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/expense_provider.dart';
-import '../models/category.dart' as cat;
+import '../models/category.dart';
 
 class CategoryManageScreen extends StatefulWidget {
   const CategoryManageScreen({Key? key}) : super(key: key);
@@ -44,8 +44,7 @@ class _CategoryManageScreenState extends State<CategoryManageScreen> {
 
     final provider = Provider.of<ExpenseProvider>(context, listen: false);
     provider.addCategory(
-      cat.Category(
-        // 不传递id，由数据库自动生成
+      Category(
         name: _nameController.text,
         icon: _iconController.text,
         isExpense: _isExpense,
@@ -71,101 +70,3 @@ class _CategoryManageScreenState extends State<CategoryManageScreen> {
           TextButton(
             onPressed: () {
               final provider = Provider.of<ExpenseProvider>(context, listen: false);
-              provider.deleteCategory(categoryId);
-              Navigator.pop(context);
-            },
-            child: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<ExpenseProvider>(context);
-    final categories = provider.categories;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('分类管理')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _nameController,
-                            decoration: const InputDecoration(labelText: '分类名称'),
-                            autofocus: true,
-                          ),
-                          TextField(
-                            controller: _iconController,
-                            decoration: const InputDecoration(
-                              labelText: '图标名称（如 restaurant、directions_car）',
-                              hintText: '参考 Material Icons 名称',
-                            ),
-                          ),
-                          SwitchListTile(
-                            title: const Text('是否为支出分类'),
-                            value: _isExpense,
-                            onChanged: (value) => setState(() => _isExpense = value),
-                          ),
-                          ElevatedButton(
-                            onPressed: _addCategory,
-                            child: const Text('添加分类'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('当前分类', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
-                        return ListTile(
-                          leading: Icon(
-                            _getCategoryIcon(category.icon),
-                            color: category.isExpense ? Colors.red : Colors.green,
-                          ),
-                          title: Text(category.name),
-                          subtitle: Text(category.isExpense ? '支出分类' : '收入分类'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteCategory(category.id!),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  IconData _getCategoryIcon(String iconName) {
-    switch (iconName) {
-      case 'restaurant':
-        return Icons.restaurant;
-      case 'directions_car':
-        return Icons.directions_car;
-      case 'shopping_cart':
-        return Icons.shopping_cart;
-      case 'attach_money':
-        return Icons.attach_money;
-      default:
-        return Icons.category;
-    }
-  }
-}
