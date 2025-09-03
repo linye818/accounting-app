@@ -5,14 +5,17 @@ import 'providers/expense_provider.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 void main() {
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    // 确保数据库初始化
-    final provider = ExpenseProvider();
-    await provider.initDatabase();
-    await provider.loadCategories();
-    await provider.loadExpenses();
+  // 全局异常捕获
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    print('Flutter 框架异常: ${details.exception}');
+  };
+  runZonedGuarded(() {
+    WidgetsFlutterBinding.ensureInitialized();
+    runApp(const MyApp());
+  }, (Object error, StackTrace stackTrace) {
+    print('全局未捕获异常: $error\n$stackTrace');
   });
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -33,7 +36,7 @@ class MyApp extends StatelessWidget {
         ],
         supportedLocales: const [Locale('zh', 'CN')],
         locale: const Locale('zh', 'CN'),
-        theme: ThemeData(primarySwatch: Colors.green), // 主色调改为绿色更贴合参考图
+        theme: ThemeData(primarySwatch: Colors.green),
         home: const AppBottomNavBar(),
       ),
     );
