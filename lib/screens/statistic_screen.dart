@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:charts_flutter/flutter.dart' as charts; // 确保导入正确
 import '../providers/expense_provider.dart';
 import '../models/expense.dart';
 import '../models/account_category.dart';
