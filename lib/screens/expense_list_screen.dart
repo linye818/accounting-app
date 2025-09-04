@@ -5,6 +5,7 @@ import '../providers/expense_provider.dart';
 import '../models/expense.dart';
 import 'detail_screen.dart';
 import 'add_edit_expense_screen.dart';
+import '../models/account_category.dart'; // 新增导入
 
 class ExpenseListScreen extends StatefulWidget {
   const ExpenseListScreen({Key? key}) : super(key: key);
@@ -59,6 +60,7 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
                     final expense = expenses[index];
                     final category = provider.categories.firstWhere(
                       (c) => c.id == expense.categoryId,
+                      // 修复：使用导入的 AccountCategory 类
                       orElse: () => AccountCategory(
                         id: -1,
                         name: '未知',
